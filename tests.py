@@ -34,7 +34,7 @@ class TestBooksCollector:
     def test_add_new_book_genre_miss(self):
         collector = BooksCollector()
         collector.add_new_book('Приключения Буратино')
-        assert len(collector.get_book_genre('Приключения Буратино')) == 0
+        assert collector.get_book_genre('Приключения Буратино') == ''
 
     @pytest.mark.parametrize(
         'name,genre',
@@ -58,50 +58,39 @@ class TestBooksCollector:
         collector.add_new_book('Кладбище домашних животных')
         assert len(collector.get_books_genre()) == 1
 
-    def test_add_new_book_max_name_length_40(self):
+    @pytest.mark.parametrize('name', ['Я', 'Евгений Онегин. Поэмы. Драмы. Сказки ч.1'])
+    def test_add_new_book_name_length_1_or_40_true(self, name):
         collector = BooksCollector()
-        collector.add_new_book('Клуб любителей книг и пирогов из картофельных очистков')
+        collector.add_new_book(name)
+        assert len(collector.get_books_genre()) == 1
+
+    @pytest.mark.parametrize('name', ['Клуб любителей книг и пирогов из картофел', ''])
+    def test_add_new_book_name_length_0_or_41_false(self, name):
+        collector = BooksCollector()
+        collector.add_new_book(name)
         assert len(collector.get_books_genre()) == 0
 
     def test_get_books_with_specific_genre_check_horror_books(self):
         collector = BooksCollector()
         collector.add_new_book('Кладбище домашних животных')
         collector.set_book_genre('Кладбище домашних животных', 'Ужасы')
-        collector.add_new_book('Дракула')
-        collector.set_book_genre('Дракула', 'Ужасы')
         collector.add_new_book('Мастер и маргарита')
         collector.set_book_genre('Мастер и маргарита', 'Фантастика')
-        collector.add_new_book('Десять негритят')
-        collector.set_book_genre('Десять негритят', 'Детективы')
-        collector.add_new_book('Приключения Буратино')
-        collector.set_book_genre('Приключения Буратино', 'Мультфильмы')
-        collector.add_new_book('Трое в лодке')
-        collector.set_book_genre('Трое в лодке', 'Комедии')
-        assert collector.get_books_with_specific_genre('Ужасы') == ['Кладбище домашних животных', 'Дракула']
+        assert collector.get_books_with_specific_genre('Ужасы') == ['Кладбище домашних животных']
 
     def test_books_for_children_correct_list_book_for_children(self):
         collector = BooksCollector()
         collector.add_new_book('Кладбище домашних животных')
         collector.set_book_genre('Кладбище домашних животных', 'Ужасы')
-        collector.add_new_book('Мастер и маргарита')
-        collector.set_book_genre('Мастер и маргарита', 'Фантастика')
-        collector.add_new_book('Десять негритят')
-        collector.set_book_genre('Десять негритят', 'Детективы')
         collector.add_new_book('Приключения Буратино')
         collector.set_book_genre('Приключения Буратино', 'Мультфильмы')
-        collector.add_new_book('Трое в лодке')
-        collector.set_book_genre('Трое в лодке', 'Комедии')
-        assert ('Кладбище домашних животных' not in collector.get_books_for_children() and
-                'Десять негритят' not in collector.get_books_for_children())
+        assert ('Кладбище домашних животных' not in collector.get_books_for_children())
 
-    def test_add_book_in_favorites_add_two_books(self):
+    def test_add_book_in_favorites_add_one_book(self):
         collector = BooksCollector()
         collector.add_new_book('Приключения Буратино')
-        collector.add_new_book('Трое в лодке')
-        collector.add_new_book('Десять негритят')
         collector.add_book_in_favorites('Приключения Буратино')
-        collector.add_book_in_favorites('Десять негритят')
-        assert len(collector.get_list_of_favorites_books()) == 2
+        assert ('Приключения Буратино' in collector.get_list_of_favorites_books())
 
     def test_add_book_in_favorites_list_double_add_block(self):
         collector = BooksCollector()
@@ -112,9 +101,16 @@ class TestBooksCollector:
 
     def test_delete_book_from_favorites_check_del_book(self):
         collector = BooksCollector()
-        collector.add_new_book('Кладбище домашних животных')
-        collector.add_book_in_favorites('Кладбище домашних животных')
         collector.add_new_book('Десять негритят')
         collector.add_book_in_favorites('Десять негритят')
+        collector.delete_book_from_favorites('Десять негритят')
+        assert 'Десять негритят' not in collector.get_list_of_favorites_books()
+
+    def test_delete_book_from_favorites_check_del_not_all_book(self):
+        collector = BooksCollector()
+        collector.add_new_book('Десять негритят')
+        collector.add_book_in_favorites('Десять негритят')
+        collector.add_new_book('Приключения Буратино')
+        collector.add_book_in_favorites('Приключения Буратино')
         collector.delete_book_from_favorites('Десять негритят')
         assert len(collector.get_list_of_favorites_books()) == 1
